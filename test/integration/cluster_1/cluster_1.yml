@@ -1,0 +1,42 @@
+---
+
+- hosts: all
+  become: true
+  vars:
+    rabbitmq_ssl                           : false
+    #rabbitmq_plugins                       : ["rabbitmq_management","rabbitmq_tracing"]
+    rabbitmq_conf_tcp_listeners_address    : "0.0.0.0"
+
+    rabbitmq_vhost_definitions             :
+                                    - name : "vhost_cluster1"
+                                    - name : "ha.cluster"
+
+    rabbitmq_users_definitions             :
+                              - vhost      : "vhost_cluster1"
+                                user       : cluster1
+                                password   : "password"
+                                force      : no
+
+                              - vhost      : "/"
+                                user       : "admin"
+                                password   : "password"
+                                force      : no
+                                tags       : ['administrator']
+    rabbitmq_clustering                    : true
+    rabbitmq_cluster_group                 : "rabbitmq-cluster"
+    rabbitmq_cluster_post_fix_domain       : ""
+    rabbitmq_erlang_cookie                 : "MYCOOKIE"
+    rabbitmq_cluster_debug                 : true
+
+    # HA Policy anythin prefixed with ha. will be mirrored on all nodes
+    rabbitmq_policy_configuration          :
+      - name                               : "high availability policy"
+        vhost                              : "/"
+        pattern                            : "^ha\\."
+        tags                               : '{"ha-mode":"all"}'
+
+    rabbitmq_cluster_api_user              : "api-automation"
+    rabbitmq_cluster_api_password          : "password"
+
+  roles:
+    - role: rabbitmq

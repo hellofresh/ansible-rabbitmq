@@ -1,0 +1,53 @@
+---
+
+driver                    :
+    name                  : <%= if ENV['TRAVIS'] then 'localhost' else 'vagrant' end  %>
+    box                   : "ubuntu/trusty64"
+    customize             :
+         cpus             : 2
+         memory           : 2048
+
+verifier                  :
+  name                    : serverspec
+  remote_exec             : false
+
+provisioner:
+    name                  : ansible_push
+    verbose               : "vvvv"
+    ansible_config        : "test/ansible.cfg"
+    ansible_playbook_bin  : "ansible-playbook"
+    idempotency_test      : True
+    diff                  : True
+    sudo                  : <%= if ENV['TRAVIS'] then 'True' else 'False' end  %>
+    raw_arguments         : <%= if ENV['TRAVIS'] then '-c local' else '' end %>
+    extra_vars            : { 'kitchen_connection': '<%= if ENV["TRAVIS"] then "local" else "smart" end %>', 'kitchen_hosts': '<%= if ENV["TRAVIS"] then "localhost" else "all" end %>' }
+    use_instance_name     : true
+    groups                :
+         rabbitmq-cluster :
+                            - "cluster-1-docker-u14"
+                            - "cluster-2-docker-u14"
+                            - "cluster-3-docker-u14"
+platforms:
+ - name                   : docker-u14
+   driver_config          :
+     image                : quay.io/hellofresh/kitchen-base
+     platform             : ubuntu
+   driver                 :
+    name                  : docker
+
+suites                    :
+  - name                  : standalone
+    provisioner           :
+        playbook          : "test/integration/standalone/standalone.yml"
+    verifier              :
+      patterns            : [ test/integration/standalone/serverspec/*_spec.rb ]
+    driver_config         :
+      run_options         : "-p 192.168.99.100:22:22"
+
+  - name                  : cluster_1
+    provisioner           :
+        playbook          : "test/integration/cluster_1/cluster_1.yml"
+    verifier              :
+      patterns            : [ test/integration/cluster_1/serverspec/*_spec.rb ]
+    driver_config         :
+      run_options         : --ip=172.17.0.11
