@@ -1,0 +1,24 @@
+---
+
+- include: install/main.yml
+
+- include: configuration.yml
+
+- include: plugins.yml
+
+- include: vhost.yml
+
+- include: users.yml
+
+- include: policy.yml
+  when: "rabbitmq_policy_configuration is defined"
+
+- include: federation.yml
+  when: rabbitmq_federation
+
+- block:
+    - include: cluster/checks.yml
+    - include: cluster/hostnames.yml
+    - include: cluster/erlang_cookie.yml
+    - include: cluster/cluster.yml
+  when: rabbitmq_clustering

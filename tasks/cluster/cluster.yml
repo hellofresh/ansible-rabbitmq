@@ -1,0 +1,79 @@
+---
+
+- name: cluster | Check cluster status for all the nodes except the node to join with
+  shell: "rabbitmqctl cluster_status | grep {{ rabbitmq_cluster_instance_to_join }}"
+  changed_when: False
+  ignore_errors: True
+  when: "{{ rabbitmq_cluster_instance_to_join !=  ansible_fqdn }}"
+  register: cluster_result
+
+- name: cluster | stop rabbitmq app for standalone nodes in order to join
+  shell: "rabbitmqctl stop_app"
+  when: cluster_result is defined and cluster_result.rc == 1
+
+# for this to work, an entry including the short hostname must exist in /etc/hosts
+- name: cluster | add this node to cluster
+  shell: "rabbitmqctl join_cluster rabbit@{{ rabbitmq_cluster_instance_to_join }}"
+  when: cluster_result is defined and cluster_result.rc == 1
+
+# TODO: consider adding functionality to join multiple nodes if one of the nodes is down
+- name: cluster | start rabbitmq app for standalone nodes
+  shell: "rabbitmqctl start_app"
+  when: cluster_result is defined and cluster_result.rc == 1
+
+- name: cluster | get nodes from API
+  uri:
+    url="http://localhost:15672/api/nodes"
+    user="{{ rabbitmq_cluster_api_user }}"
+    password="{{ rabbitmq_cluster_api_password }}"
+    method="GET"
+    return_content=true
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+  register: reported_api_nodes
+
+- name: cluster | debug display regex
+  debug:
+    var=rabbitmq_cluster_post_fix_domain_regex_replace
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+  when: rabbitmq_cluster_debug
+
+- name: cluster | format each node in the rabbitmq group to rabbit@shortname
+  set_fact:
+    formatted_inventory_nodes="{{ groups[rabbitmq_cluster_group] | map('regex_replace', rabbitmq_cluster_post_fix_domain_regex_replace, 'rabbit@\\1') | list }}"
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+
+- name: cluster | debug display formatted inventory nodes
+  debug:
+    var=formatted_inventory_nodes
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+  when: rabbitmq_cluster_debug
+
+- name: cluster | set cluster nodes to be removed which are not in the formatted_inventory_nodes
+  set_fact:
+    rabbitmq_cluster_nodes_to_remove="{{ reported_api_nodes.content | from_json | map(attribute='name') | difference(formatted_inventory_nodes) | list }}"
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+
+- name: cluster | debug display nodes that will be removed
+  debug: var=rabbitmq_cluster_nodes_to_remove
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+  when: rabbitmq_cluster_debug
+
+- name: cluster | try to stop nodes to be removed
+  shell: "rabbitmqctl stop_app"
+  delegate_to: "{{ item | replace('rabbit@', '') + '.' + rabbitmq_cluster_post_fix_domain }}"
+  run_once: true
+  with_items: "{{ rabbitmq_cluster_nodes_to_remove }}"
+  when: rabbitmq_cluster_nodes_to_remove != []
+
+- name: cluster | forget not running cluster nodes
+  shell: "rabbitmqctl forget_cluster_node {{ item }}"
+  delegate_to: "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index] }}"
+  run_once: true
+  with_items: "{{ rabbitmq_cluster_nodes_to_remove }}"
+  when: rabbitmq_cluster_nodes_to_remove != []

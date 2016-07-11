@@ -1,0 +1,46 @@
+---
+
+- name: user | add rabbitmq user and set privileges
+  rabbitmq_user:
+    user="{{ item.user }}"
+    password="{{ item.password }}"
+    vhost="{{ item.vhost | default('/', false) }}"
+    node="{{ item.node | default('rabbit') }}"
+    tags="{{ (item.tags | default('')) | join(',') }}"
+    configure_priv="{{ item.configure_priv | default('.*') }}"
+    read_priv="{{ item.read_priv | default('.*') }}"
+    write_priv="{{ item.write_priv | default('.*') }}"
+    state=present
+    force="{{ item.force| default('yes') }}"
+  with_items: "{{ rabbitmq_users_definitions }}"
+
+- name: user | add cluster automation user for API
+  rabbitmq_user:
+    user="{{ rabbitmq_cluster_api_user }}"
+    vhost="/"
+    node="rabbit"
+    password="{{ rabbitmq_cluster_api_password }}"
+    configure_priv=".*"
+    read_priv=".*"
+    write_priv=".*"
+    tags="administrator"
+    state="present"
+    force=False
+  when: rabbitmq_clustering
+
+- name: user | remove guest user (hostname)
+  rabbitmq_user:
+    user="guest"
+    vhost="/"
+    node="rabbit@{{ ansible_hostname }}"
+    state="absent"
+  register: rm_guest_hostname
+  ignore_errors: true
+  when: remove_guest_user
+
+- name: user | remove guest user (default)
+  rabbitmq_user:
+    user="guest"
+    vhost="/"
+    state="absent"
+  when: rm_guest_hostname | failed

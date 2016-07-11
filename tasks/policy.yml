@@ -1,0 +1,8 @@
+---
+- name: policy | set policies
+  rabbitmq_policy:
+    name={{ item.name }}
+    vhost={{ item.vhost | default('/', false) }}
+    pattern={{ item.pattern }}
+    tags={{ item.tags }}
+  with_items: "{{ rabbitmq_policy_configuration }}"

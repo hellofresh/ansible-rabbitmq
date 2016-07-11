@@ -1,0 +1,22 @@
+---
+# this logic is fault. If we have a + b + c and we remove c this wont work FIX
+- name: plugins | enable plugins
+  rabbitmq_plugin:
+    names={{ rabbitmq_plugins | join(',') }}
+    new_only={{ rabbitmq_new_only }}
+  notify: restart rabbitmq-server
+  when: rabbitmq_plugins != []
+
+- name: plugins | get the list of active plugins to disable
+  command: rabbitmq-plugins list -e -m
+  changed_when: False
+  register: result
+  when: rabbitmq_plugins == []
+
+- name: plugins | disable plugins if none added in the configuration
+  rabbitmq_plugin:
+    name={{ item }}
+    state=disabled
+  notify: restart rabbitmq-server
+  with_items: "{{ result.stdout_lines | default([]) }}"
+  when: rabbitmq_plugins == [] and result is defined and result.stdout_lines is defined

@@ -1,0 +1,6 @@
+---
+
+- name: cluster | check cluster group
+  fail:
+    msg="Your configuration is not valid 'rabbitmq_cluster_group' varaible  with value '{{ rabbitmq_cluster_group }}' is not valid group."
+  when: "{{ groups[rabbitmq_cluster_group] is not defined }}"
