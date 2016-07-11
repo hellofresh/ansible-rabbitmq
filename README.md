@@ -1,17 +1,6 @@
-# Announce
-
-Long time no update. I'm back on this playbook again, I'll be merging fixes (url,
-key checking,...) in master and releasing a working tagged version.
-
-Then I'll focus on creating a next branche that will be the version 2.0 of this
-playbook. The main things I plan to do with the version 2 is going to separate
-the installation steps from the pure configuration. I don't want to support a
-gazillion OS in one playbook. Thus, you'll be able to make a
-ansible-playbook-rabbitmq-install-my-little-snowflak-os yourself :)
-
-Thank you all for all the participation!
-
 # Rabbitmq Playbook
+
+HelloFresh extension of the RabbitMQ playbook which allows clustering. Originally written by [Mayeu](https://github.com/Mayeu/ansible-playbook-rabbitmq).
 
 Playbook to install and configure rabbitmq. Will come with various
 configuration tweaking later on.
@@ -19,53 +8,13 @@ configuration tweaking later on.
 If you wish to discuss modifications, or help to support more platforms, open
 an issue.
 
-## Installation
-
-Use Ansible galaxy to install this playbook:
-
-    $ ansible-galaxy install Mayeu.RabbitMQ,1.4.0
-
-The `master` branch should currently be considered instable. Please avoid using
-it for something else than test purpose :)
-
-## Supported system
-
-Currently only Debian Jessie and Wheezy on amd64 are supported. Patch welcome
-to support other distribution or OS.
-
-## Semantic versioning 2.0.0
-
-Starting with the commit
-[67c608826a140868a71854ce3129b5f3d67ddcce](https://github.com/Mayeu/ansible-playbook-rabbitmq/commit/67c608826a140868a71854ce3129b5f3d67ddcce),
-this playbook use semantic versioning. Following the specification, and since
-the playbook is used in production and I want to avoid breaking the
-compatibility, the first version number is 1.0.0
-
-The public API defined in the semantic versioning correspond to the settings
-available to the user. Breaking the API (incrementing from `X.Y.Z` to
-`(X+1).Y.Z`) in this context mean that the user need to change variable name
-for its playbook to run.
-
-Any new feature added (from `X.Y.Z` to `X.(Y+1).Z`) should have a working
-default value that need no user interaction by default. If a feature addition
-require user interaction, then it is not a minor upgrade, but a major one.
-
-## Role Variables
-
-### Installation
-
-|Name|Type|Description|Default|
-|----|----|-----------|-------|
-`rabbitmq_os_package`|Bool|When true uses the default package proposed by the OS or distribution instead of the one distributed by RabbitMQ.|`false`|
-
-
 ### Environment
 
 |Name|Type|Description|Default|
 |----|----|-----------|-------|
 `rabbitmq_conf_env`|Hash|Set environment variable|undef|
 
-Exemple:
+Example:
 
 ```yaml
 rabbitmq_conf_env:
@@ -195,17 +144,89 @@ And then configure the role:
     rabbitmq_server_cert: files/myserver_cert.crt
 ```
 
+## Variables
+
+```yaml
+# Take the package given by the OS/distrib
+rabbitmq_os_package                           : false
+
+# Plugins
+rabbitmq_plugins                              : []
+rabbitmq_new_only                             : 'no'
+
+# VHOST
+rabbitmq_vhost_definitions                    : []
+rabbitmq_users_definitions                    : []
+
+# Avoid setting up federation
+rabbitmq_federation                           : false
+
+# defaults file for rabbitmq
+rabbitmq_cacert                               : "files/rabbitmq_cacert.pem"
+rabbitmq_server_key                           : "files/rabbitmq_server_key.pem"
+rabbitmq_server_cert                          : "files/rabbitmq_server_cert.pem"
+rabbitmq_ssl                                  : true
+
+## Optional logging
+##  none, error, warnings, info, debug
+# rabbitmq_log_level                           :
+#                                                  channel    : error
+#                                                  connection : error
+#                                                  federation : error
+#                                                  mirroring  : error
+
+# ######################
+# RabbitMQ Configuration
+# ######################
+
+# rabbitmq TCP configuration
+rabbitmq_conf_tcp_listeners_address           : '0.0.0.0'
+rabbitmq_conf_tcp_listeners_port              : 5672
+
+# rabbitmq SSL configuration
+rabbitmq_conf_ssl_listeners_address           : '0.0.0.0'
+rabbitmq_conf_ssl_listeners_port              : 5671
+rabbitmq_conf_ssl_options_cacertfile          : "/etc/rabbitmq/ssl/{{ rabbitmq_cacert | basename }}"
+rabbitmq_conf_ssl_options_certfile            : "/etc/rabbitmq/ssl/{{ rabbitmq_server_cert | basename }}"
+rabbitmq_conf_ssl_options_keyfile             : "/etc/rabbitmq/ssl/{{ rabbitmq_server_key | basename }}"
+rabbitmq_conf_ssl_options_fail_if_no_peer_cert: "true"
+
+rabbitmq_env                                  : false
+# Guest options
+remove_guest_user                             : true
+
+# Enable cluster
+rabbitmq_clustering                           : false
+## Erlang cookie
+rabbitmq_erlang_cookie_path                   : "/var/lib/rabbitmq/.erlang.cookie"
+rabbitmq_erlang_cookie                        : beKSqkmoLrtvVfjOytLOQpATbGVEGbVA #test cookie, override for production
+## Cluster options
+rabbitmq_cluster_instance_to_join_index       : 0
+rabbitmq_cluster_instance_to_join             : "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index].split('.')[0] }}"
+rabbitmq_cluster_group                        : rabbit_cluster
+rabbitmq_cluster_post_fix_domain              : "production.example.com"
+# Automation user for cluster. You should encrypt
+rabbitmq_cluster_api_user                     : "api-automation"
+rabbitmq_cluster_api_password                 : "api-password"
+
+# How to get the IPs of cluster
+rabbitmq_clustering_resolve_names             : "ansible" # ['ansible', dns]
+
+## Probably dont need to change that stuff
+### Construct a regex to match group before .
+rabbitmq_cluster_post_fix_domain_regex_replace: "([^.]*).*"
+# Print extra message related to inventory
+rabbitmq_cluster_debug                        : false
+```
+
 ## Testing
-
-There is some tests that try to provision a VM using Vagrant. Just launch them
-with:
-
-    $ vagrant up # for test with Debian jessie
-    $ export VAGRANT_BOX_NAME='chef/centos-6.5' vagrant up # for test with Centos
-
-You can change the VM used during test by setting the `VAGRANT_BOX_NAME` env
-variable to something else than `deb/jessie`.
 
 ## License
 
 BSD
+
+<p align="center">
+  <a href="https://hellofresh.com">
+    <img width="120" src="https://www.hellofresh.de/images/hellofresh/press/HelloFresh_Logo.png">
+  </a>
+</p>
