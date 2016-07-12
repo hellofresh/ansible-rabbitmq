@@ -1,4 +1,5 @@
 ---
+
 # RabbitMQ uses short names for hosts. We need to make them resolvable along all the clusters
 - name: hostnames | resolve cluster IPs with DNS
   debug:
@@ -12,7 +13,7 @@
 - name: hostnames | manage cluster nodes in host file
   lineinfile:
     dest="/etc/hosts"
-    regexp="^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\s+{{ item.1 | replace('.' + rabbitmq_cluster_post_fix_domain, '') }} {{ '#' }}ansible-rabbitmq-role"
+    regexp="^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}\s{{ item.1.split('.')[0] }} {{ '#' }}ansible-rabbitmq-role"
     line="{{ rabbitmq_server_ips['results'][item.0]['msg'] }}{{'\t'}}{{ item.1.split('.')[0] }} {{ '#' }}ansible-rabbitmq-role"
     state="present"
-  with_items: "{{ groups[rabbitmq_cluster_group] | difference([inventory_hostname]) }}"
+  with_indexed_items: "{{ groups[rabbitmq_cluster_group] | difference([inventory_hostname]) }}"
