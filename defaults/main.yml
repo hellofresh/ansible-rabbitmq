@@ -66,11 +66,13 @@ rabbitmq_cluster_api_user                     : "api-automation"
 rabbitmq_cluster_api_password                 : "api-password"
 
 # How to get the IPs of cluster
-rabbitmq_clustering_resolve_names             : "ansible" # ['ansible', dns]
+rabbitmq_clustering_resolve_names             : "dns" # ['no', dns]
 
 ## Probably dont need to change that stuff
 ### Construct a regex to match group before .
 rabbitmq_cluster_post_fix_domain_regex_replace: "([^.]*).*"
 # Print extra message related to inventory
 rabbitmq_cluster_debug                        : false
+#
+rabbit_cluster_nodes_version                  : []
 

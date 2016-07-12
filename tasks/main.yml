@@ -19,6 +19,7 @@
 - block:
     - include: cluster/checks.yml
     - include: cluster/hostnames.yml
+      when: rabbitmq_clustering_resolve_names != "no"
     - include: cluster/erlang_cookie.yml
     - include: cluster/cluster.yml
   when: rabbitmq_clustering
