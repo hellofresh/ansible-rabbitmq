@@ -10,7 +10,7 @@ before_install:
   - sudo apt-get install -qq python-apt python-pycurl git python-pip ruby ruby-dev build-essential autoconf
   - gem install bundler
   # Get ansible install
-  - curl -s https://raw.githubusercontent.com/AutomationWithAnsible/ansible-setup/master/example/travis-install -o /tmp/travis-ansible-setup.sh
+  - curl -s https://raw.githubusercontent.com/AutomationWithAnsible/ansible-setup/master/example/travis_2.x.sh -o /tmp/travis-ansible-setup.sh
 
 install:
   - bash /tmp/travis-ansible-setup.sh
