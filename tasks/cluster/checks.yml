@@ -1,6 +1,28 @@
 ---
 
-- name: cluster | check cluster group
+- name: check | cluster group should be valid
   fail:
     msg="Your configuration is not valid 'rabbitmq_cluster_group' varaible  with value '{{ rabbitmq_cluster_group }}' is not valid group."
   when: "{{ groups[rabbitmq_cluster_group] is not defined }}"
+
+- name: check | get rabbitmq version in each node in the cluster
+  shell: rabbitmqctl status|grep "{rabbit,\"RabbitMQ\"" | cut -d, -f3 | cut -d "\"" -f2
+  delegate_to: "{{ item }}"
+  changed_when: false
+  run_once: true
+  with_items: "{{ groups[rabbitmq_cluster_group] }}"
+  register: cluster_versions_command
+
+- name: check | Create a list of nodes and versions
+  set_fact:
+   rabbit_cluster_nodes_version: "{{ [{ 'node': item.item, 'version': item.stdout }] + rabbit_cluster_nodes_version }}"
+  with_items: "{{ cluster_versions_command.results }}"
+  run_once: true
+
+  # Filter out node values that are not the same version then compae with original node version
+  # if lists dont match then we have different versions in our cluster
+- name: check | Fail if version in cluster dont match
+  fail:
+    msg="Rabbiqmq version in cluster dont match. Node versions = {{rabbit_cluster_nodes_version }}"
+  run_once: true
+  when: "{{ rabbit_cluster_nodes_version | selectattr('version', 'equalto', rabbit_cluster_nodes_version[0]['version']) | list != rabbit_cluster_nodes_version }}"
