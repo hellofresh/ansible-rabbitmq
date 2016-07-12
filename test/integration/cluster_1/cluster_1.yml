@@ -3,6 +3,7 @@
 - hosts: all
   become: true
   vars:
+    rabbitmq_clustering_resolve_names      : "no"
     rabbitmq_ssl                           : false
     #rabbitmq_plugins                       : ["rabbitmq_management","rabbitmq_tracing"]
     rabbitmq_conf_tcp_listeners_address    : "0.0.0.0"

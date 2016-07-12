@@ -24,9 +24,9 @@ provisioner:
     use_instance_name     : true
     groups                :
          rabbitmq-cluster :
-                            - "cluster-1-docker-u14"
-                            - "cluster-2-docker-u14"
-                            - "cluster-3-docker-u14"
+                            - "cluster1.192.168.110.10.xip.io"
+                            - "cluster2.192.168.110.20.xip.io"
+#                            - "cluster-3-docker-u14"
 platforms:
  - name                   : docker-u14
    driver_config          :
@@ -34,6 +34,8 @@ platforms:
      platform             : ubuntu
    driver                 :
     name                  : docker
+    socket                : unix:///var/run/docker.sock
+    use_sudo              : false
 
 suites                    :
   - name                  : standalone
@@ -41,13 +43,46 @@ suites                    :
         playbook          : "test/integration/standalone/standalone.yml"
     verifier              :
       patterns            : [ test/integration/standalone/serverspec/*_spec.rb ]
-    driver_config         :
-      run_options         : "-p 192.168.99.100:22:22"
 
-  - name                  : cluster_1
+  - name                  : cluster1
     provisioner           :
         playbook          : "test/integration/cluster_1/cluster_1.yml"
+        inventory_hostname: cluster1.192.168.110.10.xip.io
     verifier              :
       patterns            : [ test/integration/cluster_1/serverspec/*_spec.rb ]
     driver_config         :
-      run_options         : --ip=172.17.0.11
+      run_options         : "--net cluster_network --ip=192.168.110.10"
+      publish_all         : true
+      hostname            : cluster1
+      instance_name       : cluster1
+      # links               :
+      #                       - "cluster_2:cluster_2"
+      #                       - "cluster_3:cluster_3"
+
+  - name                  : cluster2.192.168.110.20.xip.io
+    provisioner           :
+        playbook          : "test/integration/cluster_2/cluster_2.yml"
+        inventory_hostname: cluster2.192.168.120.10.xip.io
+    verifier              :
+      patterns            : [ test/integration/cluster_2/serverspec/*_spec.rb ]
+    driver_config         :
+      run_options         : "--net cluster_network --ip=192.168.110.20"
+      publish_all         : true
+      hostname            : cluster2
+      instance_name       : cluster2
+      # links               :
+      #                       - "cluster_1:cluster_1"
+      #                       - "cluster_3:cluster_3"
+
+  - name                  : cluster3
+    provisioner           :
+        playbook          : "test/integration/cluster_3/cluster_3.yml"
+    verifier              :
+      patterns            : [ test/integration/cluster_3/serverspec/*_spec.rb ]
+    driver_config         :
+      instance_name       : cluster3
+      publish_all         : true
+      # links               :
+      #                       - "cluster_1:cluster_1"
+      #                       - "cluster_2:cluster_2"
+
