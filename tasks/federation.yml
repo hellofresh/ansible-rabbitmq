@@ -17,11 +17,12 @@
     name={{ item.name }}
     vhost={{ item.vhost | default('/', false) }}
     value=" {{ item.value }} "
-  with_items: rabbitmq_federation_configuration
+  with_items: "{{rabbitmq_federation_configuration}}"
 
 - name: get the version of rabbitmq
   shell: rabbitmqctl status | awk '{print $NF}'
   register: rabbitmq_version
+  changed_when: False
 
 # local-username is no longer required with 3.3.0
 # http://www.rabbitmq.com/release-notes/README-3.3.0.txt
