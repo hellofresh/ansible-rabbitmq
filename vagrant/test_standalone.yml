@@ -2,10 +2,10 @@
 - shell: netstat -an | grep 0.0.0.0:5672.*LISTEN
   register: test_result
   ignore_errors: True
-- name: rabbitmq should not be listenning to the unencrypted port
+- name: rabbitmq should be listenning to the unencrypted port
   assert:
     that:
-      - test_result|failed
+      - test_result|success
 
 - shell: netstat -an | grep 0.0.0.0:5671.*LISTEN
   register: test_result
