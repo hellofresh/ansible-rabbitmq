@@ -23,6 +23,13 @@ rabbitmq_server_key                           : "files/rabbitmq_server_key.pem"
 rabbitmq_server_cert                          : "files/rabbitmq_server_cert.pem"
 rabbitmq_ssl                                  : true
 
+# SSL Configuration
+rabbitmq_copy_ssl_files                       : true
+rabbitmq_use_ssl_cn_as_login                  : false
+
+# Authentication mechanisms (not set by default)
+# rabbitmq_auth_mechanisms                    : [ 'PLAIN', 'AMQPLAIN' ]
+
 ## Optional logging
 ##  none, error, warnings, info, debug
 # rabbitmq_log_level                           :

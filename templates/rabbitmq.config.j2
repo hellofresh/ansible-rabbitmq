@@ -24,6 +24,12 @@
     {tcp_listeners, []}{% if rabbitmq_ssl %},
 {% endif %}
 {% endif %}
+{% if rabbitmq_auth_mechanisms is defined %}
+    {auth_mechanisms, [ {% for authmech in rabbitmq_auth_mechanisms %}'{{authmech}}'{% if not loop.last %},{% endif %}{% endfor %} ]},
+{% endif %}
+{% if rabbitmq_use_ssl_cn_as_login %}
+    {ssl_cert_login_from, common_name},
+{% endif %}
 {% if rabbitmq_ssl %}
     {ssl_listeners, [{"{{ rabbitmq_conf_ssl_listeners_address }}", {{ rabbitmq_conf_ssl_listeners_port }}}]},
     {ssl_options, [
