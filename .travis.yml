@@ -2,7 +2,10 @@
 language: python
 python: "2.7"
 before_install:
+  # Untravis rabbitmq-server repo
+  - sudo rm -fr /etc/apt/sources.list.d/rabbitmq_rabbitmq-server.list*
   - sudo apt-get update -qq
+  # Remove existing rabbitmq-server-package
   - sudo apt-get purge rabbitmq-server
 install:
   # Install Ansible.
