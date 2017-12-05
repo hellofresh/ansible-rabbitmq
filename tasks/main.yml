@@ -14,7 +14,7 @@
   when: rabbitmq_federation
 
 - include: policy.yml
-  when: "rabbitmq_policy_configuration is defined"
+  when: rabbitmq_policy_configuration is defined
 
 - block:
     - include: cluster/checks.yml
