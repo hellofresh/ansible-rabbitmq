@@ -4,7 +4,7 @@
   shell: "rabbitmqctl cluster_status | grep {{ rabbitmq_cluster_instance_to_join }}"
   changed_when: False
   ignore_errors: True
-  when: "{{ rabbitmq_cluster_instance_to_join !=  ansible_fqdn }}"
+  when: rabbitmq_cluster_instance_to_join !=  ansible_fqdn
   register: cluster_result
 
 - name: cluster | stop rabbitmq app for standalone nodes in order to join

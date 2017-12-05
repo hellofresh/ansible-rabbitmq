@@ -3,7 +3,7 @@
 - name: check | cluster group should be valid
   fail:
     msg="Your configuration is not valid 'rabbitmq_cluster_group' varaible  with value '{{ rabbitmq_cluster_group }}' is not valid group."
-  when: "{{ groups[rabbitmq_cluster_group] is not defined }}"
+  when: groups[rabbitmq_cluster_group] is not defined
 
 - name: check | get rabbitmq version in each node in the cluster
   shell: rabbitmqctl status|grep "{rabbit,\"RabbitMQ\"" | cut -d, -f3 | cut -d "\"" -f2
@@ -25,4 +25,4 @@
   fail:
     msg="Rabbiqmq version in cluster dont match. Node versions = {{rabbit_cluster_nodes_version }}"
   run_once: true
-  when: "{{ rabbit_cluster_nodes_version | selectattr('version', 'equalto', rabbit_cluster_nodes_version[0]['version']) | list != rabbit_cluster_nodes_version }}"
+  when: rabbit_cluster_nodes_version | selectattr('version', 'equalto', rabbit_cluster_nodes_version[0]['version']) | list != rabbit_cluster_nodes_version
