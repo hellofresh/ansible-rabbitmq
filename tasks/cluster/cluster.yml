@@ -7,19 +7,23 @@
   when: rabbitmq_cluster_instance_to_join !=  ansible_fqdn
   register: cluster_result
 
+- name: debug
+  debug:
+    var: cluster_result
+
 - name: cluster | stop rabbitmq app for standalone nodes in order to join
   shell: "rabbitmqctl stop_app"
-  when: cluster_result is defined and cluster_result.rc == 1
+  when: cluster_result is defined and cluster_result.rc is defined and cluster_result.rc == 1
 
 # for this to work, an entry including the short hostname must exist in /etc/hosts
 - name: cluster | add this node to cluster
   shell: "rabbitmqctl join_cluster rabbit@{{ rabbitmq_cluster_instance_to_join }}"
-  when: cluster_result is defined and cluster_result.rc == 1
+  when: cluster_result is defined and cluster_result.rc is defined and cluster_result.rc == 1
 
 # TODO: consider adding functionality to join multiple nodes if one of the nodes is down
 - name: cluster | start rabbitmq app for standalone nodes
   shell: "rabbitmqctl start_app"
-  when: cluster_result is defined and cluster_result.rc == 1
+  when: cluster_result is defined and cluster_result.rc is defined and cluster_result.rc == 1
 
 - name: cluster | get nodes from API
   uri:
