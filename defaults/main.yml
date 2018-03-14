@@ -58,11 +58,16 @@ rabbitmq_env                                  : false
 # Guest options
 remove_guest_user                             : true
 
+# File limits
+rabbitmq_nofile_limit                         : 64000
+
 # Enable cluster
 rabbitmq_clustering                           : false
+
 ## Erlang cookie
 rabbitmq_erlang_cookie_path                   : "/var/lib/rabbitmq/.erlang.cookie"
 rabbitmq_erlang_cookie                        : beKSqkmoLrtvVfjOytLOQpATbGVEGbVA #test cookie, override for production
+
 ## Cluster options
 rabbitmq_cluster_instance_to_join_index       : 0
 rabbitmq_cluster_instance_to_join             : "{{ groups[rabbitmq_cluster_group][rabbitmq_cluster_instance_to_join_index].split('.')[0] }}"
