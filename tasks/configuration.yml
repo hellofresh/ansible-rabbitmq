@@ -1,5 +1,38 @@
 ---
 
+- name: configuration | soft limits (non-systemd)
+  pam_limits:
+    domain="rabbit"
+    limit_type="soft"
+    limit_item="nofile"
+    value="{{ rabbitmq_nofile_limit }}"
+  when: ansible_service_mgr != "systemd"
+
+- name: configuration | hard limits (non-systemd)
+  pam_limits:
+    domain="rabbit"
+    limit_type="hard"
+    limit_item="fsize"
+    use_max="yes"
+    value="{{ rabbitmq_nofile_limit }}"
+  when: ansible_service_mgr != "systemd"
+
+- name: configuration | systemd unit directory
+  file:
+    path: /etc/systemd/system/rabbitmq-server.service.d
+    state: directory
+
+- name: configuration | nofile limit (systemd)
+  template:
+    src="systemd_limits.conf.j2"
+    dest="/etc/systemd/system/rabbitmq-server.service.d/limits.conf"
+    owner="root"
+    group="root"
+    mode=0644
+    backup="yes"
+  notify: reload systemd
+  when: ansible_service_mgr == "systemd"
+
 - name: configuration | create the ssl folder for rabbitmq
   file:
     path="/etc/rabbitmq/ssl/"
@@ -45,18 +78,3 @@
     backup="yes"
   notify: restart rabbitmq-server
   when: rabbitmq_conf_env is defined
-
-- name: configuration | soft limits
-  pam_limits:
-    domain="rabbit"
-    limit_type="soft"
-    limit_item="nofile"
-    value=64000
-
-- name: configuration | hard limits
-  pam_limits:
-    domain="rabbit"
-    limit_type="hard"
-    limit_item="fsize"
-    use_max="yes"
-    value=64000

@@ -1,5 +1,9 @@
 ---
 # handlers file for rabbitmq
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
 - name: restart rabbitmq-server
   service: name=rabbitmq-server state=restarted enabled=yes
 
