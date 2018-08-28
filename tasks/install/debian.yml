@@ -1,4 +1,15 @@
 ---
+# Erlang stuff
+- name: add erlang repo key
+  apt_key:
+    url: https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc
+    state: present
+
+- name: add erlang repo
+  apt_repository:
+    repo: deb http://dl.bintray.com/rabbitmq/debian xenial erlang-20.x
+    state: present
+    update_cache: yes
 
 # RabbitMQ official install
 - name: "add the official rabbitmq repository's key"
